@@ -87,6 +87,20 @@ To get started with development:
     npm test
     ```
 
+### Manual integration test
+
+The test suite includes an optional integration test that connects to a real RCON server.
+To run it, set the following environment variables before executing `npm test`:
+
+```bash
+export RCON_HOST=127.0.0.1
+export RCON_PORT=25575
+export RCON_PASSWORD=secret
+npm test
+```
+
+If these variables are not set, the integration test will be skipped.
+
 ## Contributing
 
 Contributions are welcome! If you'd like to add support for a new game, fix a bug, or improve the library, please open an issue or submit a pull request.
