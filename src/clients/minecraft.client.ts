@@ -1,10 +1,12 @@
 import { Socket, createConnection } from "node:net";
 import { BaseClient } from "./base.client";
-
-const PACKET_TYPE_AUTH = 3;
-const PACKET_TYPE_COMMAND = 2;
-const PACKET_TYPE_RESPONSE = 0;
-const PACKET_TYPE_AUTH_RESPONSE = 2;
+import {
+  createPacket,
+  PACKET_TYPE_AUTH,
+  PACKET_TYPE_AUTH_RESPONSE,
+  PACKET_TYPE_COMMAND,
+  PACKET_TYPE_RESPONSE,
+} from "../utils/packet";
 
 export class MinecraftClient extends BaseClient {
   private socket: Socket | null = null;
@@ -136,13 +138,7 @@ export class MinecraftClient extends BaseClient {
       }
 
       const id = ++this.requestId;
-      const buffer = Buffer.alloc(14 + body.length);
-      buffer.writeInt32LE(10 + body.length, 0);
-      buffer.writeInt32LE(id, 4);
-      buffer.writeInt32LE(type, 8);
-      buffer.write(body, 12, "utf8");
-      buffer.writeInt8(0, 12 + body.length);
-      buffer.writeInt8(0, 13 + body.length);
+      const buffer = createPacket(id, type, body);
 
       this.socket.write(buffer, (err) => {
         if (err) {
