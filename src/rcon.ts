@@ -1,100 +1,82 @@
 import { EventEmitter } from "node:events";
-import WebSocket from "ws";
+import { Game } from "./game";
+import type { BaseClient } from "./clients/base.client";
+import { MinecraftClient } from "./clients/minecraft.client";
+import { RustClient } from "./clients/rust.client";
+import { SevenDaysToDieClient } from "./clients/seven-days-to-die.client";
+import { ArkSurvivalEvolvedClient } from "./clients/ark-survival-evolved.client";
+import { DayzClient } from "./clients/dayz.client";
+import { PalworldClient } from "./clients/palworld.client";
+import { ArmaReforgerClient } from "./clients/arma-reforger.client";
+import { ScumClient } from "./clients/scum.client";
+import { ValheimClient } from "./clients/valheim.client";
 
 export interface RconOptions {
   host: string;
   port: number;
   password: string;
+  game?: Game;
   secure?: boolean;
+  timeout?: number;
 }
 
 export class Rcon extends EventEmitter {
-  private socket: WebSocket | null = null;
-  private options: RconOptions;
-  private requestId = 0;
-  private pending = new Map<number, (data: string) => void>();
+  private client: BaseClient;
 
   constructor(options: RconOptions) {
     super();
-    this.options = options;
-  }
 
-  connect(): void {
-    const protocol = this.options.secure ? "wss" : "ws";
-    const url = `${protocol}://${this.options.host}:${this.options.port}/${this.options.password}`;
-    this.socket = new WebSocket(url);
-
-    this.socket.on("open", () => {
-      this.emit("connect");
-      this.emit("authenticated");
-    });
-
-    this.socket.on("message", (data) => {
-      const message = JSON.parse(data.toString());
-      const pending = this.pending.get(message.Identifier);
-      if (pending) {
-        this.pending.delete(message.Identifier);
-        pending(message.Message);
-      } else {
-        this.emit("response", message.Message);
-      }
-    });
-
-    this.socket.on("error", (err) => {
-      this.emit("error", err);
-    });
-
-    this.socket.on("close", () => {
-      this.emit("end");
-    });
-  }
-
-  send(command: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-        return reject(new Error("WebSocket not open."));
-      }
-
-      this.requestId++;
-      this.pending.set(this.requestId, resolve);
-
-      const packet = {
-        Identifier: this.requestId,
-        Message: command,
-        Name: "WebRcon",
-      };
-
-      this.socket.send(JSON.stringify(packet), (err) => {
-        if (err) {
-          this.pending.delete(this.requestId);
-          reject(err);
-        }
-      });
-    });
-  }
-
-  end(): void {
-    if (this.socket) {
-      this.socket.close();
+    switch (options.game) {
+      case Game.RUST:
+        this.client = new RustClient(options);
+        break;
+      case Game.SEVEN_DAYS_TO_DIE:
+        this.client = new SevenDaysToDieClient(options);
+        break;
+      case Game.ARK_SURVIVAL_EVOLVED:
+        this.client = new ArkSurvivalEvolvedClient(options);
+        break;
+      case Game.DAYZ:
+        this.client = new DayzClient(options);
+        break;
+      case Game.PALWORLD:
+        this.client = new PalworldClient(options);
+        break;
+      case Game.ARMA_REFORGER:
+        this.client = new ArmaReforgerClient(options);
+        break;
+      case Game.SCUM:
+        this.client = new ScumClient(options);
+        break;
+      case Game.VALHEIM:
+        this.client = new ValheimClient(options);
+        break;
+      case Game.MINECRAFT:
+      default:
+        this.client = new MinecraftClient(options);
+        break;
     }
+
+    this.client.on("connect", () => this.emit("connect"));
+    this.client.on("authenticated", () => this.emit("authenticated"));
+    this.client.on("response", (response: string) =>
+      this.emit("response", response)
+    );
+    this.client.on("error", (error: Error) => this.emit("error", error));
+    this.client.on("end", () => this.emit("end"));
   }
 
-  public static connect(options: RconOptions): Promise<Rcon> {
+  public send(command: string): Promise<string> {
+    return this.client.send(command);
+  }
+
+  public end(): void {
+    this.client.end();
+  }
+
+  public static async connect(options: RconOptions): Promise<Rcon> {
     const rcon = new Rcon(options);
-    return new Promise<Rcon>((resolve, reject) => {
-      const onError = (err: Error): void => {
-        rcon.end();
-        reject(err);
-      };
-
-      rcon.once("authenticated", () => {
-        rcon.off("error", onError);
-        resolve(rcon);
-      });
-
-      rcon.once("error", onError);
-
-      rcon.connect();
-    });
+    await rcon.client.connect();
+    return rcon;
   }
 }

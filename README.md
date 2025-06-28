@@ -19,15 +19,15 @@ This library allows you to connect to game servers using the RCON protocol to ex
 
 ## Supported Games
 
-- [ ] 7 Days to Die
-- [ ] ARK: Survival Evolved
-- [ ] DayZ
-- [ ] Minecraft
-- [ ] Palworld
-- [ ] Arma Reforger
-- [ ] Rust
-- [ ] SCUM
-- [ ] Valheim
+- [ ] 7 Days to Die (Not yet implemented)
+- [ ] ARK: Survival Evolved (Not yet implemented)
+- [ ] DayZ (Not yet implemented)
+- [x] Minecraft
+- [ ] Palworld (Not yet implemented)
+- [ ] Arma Reforger (Not yet implemented)
+- [x] Rust
+- [ ] SCUM (Not yet implemented)
+- [ ] Valheim (Not yet implemented)
 
 ## Installation
 
@@ -35,39 +35,34 @@ This library allows you to connect to game servers using the RCON protocol to ex
 npm install rcon-node
 ```
 
-## Quick Start (Planned Implementation)
+## Quick Start
 
 ```typescript
-import { Rcon } from "rcon-node";
+import { Rcon, Game } from "rcon-node";
 
-const rcon = new Rcon({
+// Connect to a Minecraft server
+const minecraftRcon = await Rcon.connect({
   host: "localhost",
   port: 25575,
   password: "password",
+  game: Game.MINECRAFT,
 });
 
-rcon.on("connect", () => {
-  console.log("Connected to RCON server!");
+const response = await minecraftRcon.send("say Hello from rcon-node!");
+console.log(response);
+minecraftRcon.end();
+
+// Connect to a Rust server
+const rustRcon = await Rcon.connect({
+  host: "localhost",
+  port: 28016,
+  password: "password",
+  game: Game.RUST,
 });
 
-rcon.on("authenticated", () => {
-  console.log("Authenticated!");
-  rcon.send("say Hello from rcon-node!");
-});
-
-rcon.on("response", (response) => {
-  console.log("Server response:", response);
-});
-
-rcon.on("error", (error) => {
-  console.error("RCON error:", error);
-});
-
-rcon.on("end", () => {
-  console.log("RCON connection closed.");
-});
-
-rcon.connect();
+const rustResponse = await rustRcon.send("say Hello from rcon-node!");
+console.log(rustResponse);
+rustRcon.end();
 ```
 
 ## Development
@@ -90,13 +85,33 @@ To get started with development:
 ### Manual integration test
 
 The test suite includes an optional integration test that connects to a real RCON server.
-To run it, you first need to create a `.env.local` file in the root of the project with the following content:
+To run it, you first need to create a `.env.local` file in the root of the project.
+The test configuration is controlled by these environment variables:
+
+- `RCON_GAME`: The game to test against (e.g., `MINECRAFT`, `RUST`). This must match a value from the `Game` enum.
+- `RCON_HOST`: The IP address of the RCON server.
+- `RCON_PORT`: The port of the RCON server.
+- `RCON_PASSWORD`: The RCON password.
+- `RCON_SECURE`: Set to `true` for WebSocket (wss://) connections, used by games like Rust. Defaults to `false`.
+
+**Example for Minecraft:**
 
 ```bash
+RCON_GAME=MINECRAFT
 RCON_HOST=127.0.0.1
 RCON_PORT=25575
 RCON_PASSWORD=secret
-RCON_SECURE=false # Set to true for wss:// connections
+RCON_SECURE=false
+```
+
+**Example for Rust:**
+
+```bash
+RCON_GAME=RUST
+RCON_HOST=127.0.0.1
+RCON_PORT=28016
+RCON_PASSWORD=secret
+RCON_SECURE=false # Set to true if your server uses a wss:// connection
 ```
 
 Then, you can run the integration tests using the following command:
