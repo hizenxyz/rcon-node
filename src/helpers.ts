@@ -1,6 +1,9 @@
 import { Rcon, type RconOptions } from "./rcon";
 
-export async function isAuth(options: RconOptions): Promise<boolean> {
+export async function isAuth(
+  options: RconOptions,
+  timeout?: number
+): Promise<boolean> {
   return new Promise((resolve) => {
     const rcon = new Rcon(options);
     let settled = false;
@@ -27,6 +30,6 @@ export async function isAuth(options: RconOptions): Promise<boolean> {
     rcon.on("error", onFail);
     rcon.on("end", onFail);
 
-    rcon.connect();
+    rcon.connect(timeout);
   });
 }

@@ -66,6 +66,7 @@
     "@typescript-eslint/eslint-plugin": "^8.35.0",
     "@typescript-eslint/parser": "^8.35.0",
     "@vitest/ui": "^3.2.4",
+    "dotenv": "^17.0.0",
     "eslint": "^9.29.0",
     "lefthook": "^1.11.14",
     "prettier": "^3.6.1",

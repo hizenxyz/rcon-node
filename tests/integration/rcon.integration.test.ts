@@ -7,20 +7,20 @@ const password = process.env.RCON_PASSWORD;
 
 const missing = !host || !port || !password;
 
-const testFn = missing ? it.skip : it;
-
 describe("RCON integration", () => {
-  testFn(
-    "connects and authenticates with a real server" +
-      (missing ? " (set RCON_HOST, RCON_PORT and RCON_PASSWORD to run)" : ""),
+  it.skipIf(missing)(
+    "connects and authenticates with a real server",
     async () => {
-      if (missing) return;
-      const authenticated = await isAuth({
-        host: host!,
-        port: parseInt(port!, 10),
-        password: password!,
-      });
+      const authenticated = await isAuth(
+        {
+          host: host!,
+          port: parseInt(port!, 10),
+          password: password!,
+        },
+        5000
+      );
       expect(authenticated).toBe(true);
-    }
+    },
+    10000
   );
 });

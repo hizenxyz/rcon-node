@@ -22,12 +22,18 @@ export class Rcon extends EventEmitter {
     this.socket = socket ?? new net.Socket();
   }
 
-  connect(): void {
+  connect(timeout?: number): void {
     this.socket.on("connect", this.onConnect);
     this.socket.on("data", this.onData);
     this.socket.on("error", (err) => this.emit("error", err));
     this.socket.on("end", () => this.emit("end"));
     this.socket.on("close", () => this.emit("end"));
+    if (timeout) {
+      this.socket.setTimeout(timeout);
+      this.socket.on("timeout", () => {
+        this.socket.destroy(new Error(`Socket timeout after ${timeout}ms`));
+      });
+    }
     this.socket.connect(this.options.port, this.options.host);
   }
 
