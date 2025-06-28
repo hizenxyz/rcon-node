@@ -97,8 +97,7 @@ Running these tasks in parallel helps keep your codebase consistently compiling,
 Before committing, run the following commands to validate your changes:
 
 ```bash
-pnpm validate
-pnpm test
+npm run ci
 ```
 
 These checks ensure type safety, coding standards, and test integrity are upheld.
