@@ -1,7 +1,7 @@
-# rcon-client
+# rcon-node
 
 [![CI](https://github.com/hizenxyz/rcon-node/actions/workflows/ci.yml/badge.svg)](https://github.com/hizenxyz/rcon-node/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/rcon-client.svg)](https://www.npmjs.com/package/rcon-client)
+[![npm version](https://img.shields.io/npm/v/rcon-client.svg)](https://www.npmjs.com/package/rcon-node)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A TypeScript RCON client library for modern game servers.
@@ -32,13 +32,13 @@ This library allows you to connect to game servers using the RCON protocol to ex
 ## Installation
 
 ```bash
-npm install rcon-client
+npm install rcon-node
 ```
 
-## Quick Start
+## Quick Start (Planned Implementation)
 
 ```typescript
-import { Rcon } from "rcon-client";
+import { Rcon } from "rcon-node";
 
 const rcon = new Rcon({
   host: "localhost",
@@ -52,7 +52,7 @@ rcon.on("connect", () => {
 
 rcon.on("authenticated", () => {
   console.log("Authenticated!");
-  rcon.send("say Hello from rcon-client!");
+  rcon.send("say Hello from rcon-node!");
 });
 
 rcon.on("response", (response) => {
