@@ -27,8 +27,12 @@ describe("RCON integration", () => {
           secure,
         });
         expect(rcon).toBeInstanceOf(Rcon);
-        const response = await rcon.send("echo test");
-        expect(response).toContain("test");
+        const command =
+          game === Game.SEVEN_DAYS_TO_DIE ? "version" : "echo test";
+        const expectedResponse =
+          game === Game.SEVEN_DAYS_TO_DIE ? "Version" : "test";
+        const response = await rcon.send(command);
+        expect(response).toContain(expectedResponse);
       } finally {
         rcon?.end();
       }

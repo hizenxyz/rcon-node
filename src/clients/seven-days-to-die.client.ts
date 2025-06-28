@@ -21,7 +21,8 @@ export class SevenDaysToDieClient extends BaseClient {
             }
 
             await readUntil(this.socket, /password[:]?/i);
-            await sendAndRead(this.socket, this.options.password, /\n/);
+            this.socket.write(`${this.options.password}\n`);
+            await readUntil(this.socket, /Press 'exit' to end session/i);
             this.authenticated = true;
             this.emit("authenticated");
             resolve();
