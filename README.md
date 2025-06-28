@@ -19,15 +19,15 @@ This library allows you to connect to game servers using the RCON protocol to ex
 
 ## Supported Games
 
-- [ ] 7 Days to Die (Not yet implemented)
-- [ ] ARK: Survival Evolved (Not yet implemented)
-- [ ] DayZ (Not yet implemented)
+- [x] 7 Days to Die
+- [ ] ARK: Survival Evolved
+- [ ] DayZ
 - [x] Minecraft
-- [ ] Palworld (Not yet implemented)
-- [ ] Arma Reforger (Not yet implemented)
+- [ ] Palworld
+- [ ] Arma Reforger
 - [x] Rust
-- [ ] SCUM (Not yet implemented)
-- [ ] Valheim (Not yet implemented)
+- [ ] SCUM
+- [ ] Valheim
 
 ## Installation
 
