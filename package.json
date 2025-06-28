@@ -1,5 +1,5 @@
 {
-  "name": "rcon-client",
+  "name": "rcon-node",
   "version": "0.1.0",
   "description": "A TypeScript RCON client library for modern game servers.",
   "author": "hizenxyz",
