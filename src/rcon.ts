@@ -1,6 +1,5 @@
-import net from "node:net";
 import { EventEmitter } from "node:events";
-import { encodePacket, decodePacket, RconPacket } from "./packet";
+import WebSocket from "ws";
 
 export interface RconOptions {
   host: string;
@@ -9,43 +8,63 @@ export interface RconOptions {
 }
 
 export class Rcon extends EventEmitter {
-  private socket: net.Socket;
+  private socket: WebSocket | null = null;
   private options: RconOptions;
-  private buffer = Buffer.alloc(0);
   private requestId = 0;
   private pending = new Map<number, (data: string) => void>();
-  private authId: number | null = null;
 
-  constructor(options: RconOptions, socket?: net.Socket) {
+  constructor(options: RconOptions) {
     super();
     this.options = options;
-    this.socket = socket ?? new net.Socket();
   }
 
-  connect(timeout?: number): void {
-    this.socket.on("connect", this.onConnect);
-    this.socket.on("data", this.onData);
-    this.socket.on("error", (err) => this.emit("error", err));
-    this.socket.on("end", () => this.emit("end"));
-    this.socket.on("close", () => this.emit("end"));
-    if (timeout) {
-      this.socket.setTimeout(timeout);
-      this.socket.on("timeout", () => {
-        this.socket.destroy(new Error(`Socket timeout after ${timeout}ms`));
-      });
-    }
-    this.socket.connect(this.options.port, this.options.host);
+  connect(): void {
+    const url = `ws://${this.options.host}:${this.options.port}/${this.options.password}`;
+    this.socket = new WebSocket(url);
+
+    this.socket.on("open", () => {
+      this.emit("connect");
+      this.emit("authenticated");
+    });
+
+    this.socket.on("message", (data) => {
+      const message = JSON.parse(data.toString());
+      const pending = this.pending.get(message.Identifier);
+      if (pending) {
+        this.pending.delete(message.Identifier);
+        pending(message.Message);
+      } else {
+        this.emit("response", message.Message);
+      }
+    });
+
+    this.socket.on("error", (err) => {
+      this.emit("error", err);
+    });
+
+    this.socket.on("close", () => {
+      this.emit("end");
+    });
   }
 
   send(command: string): Promise<string> {
-    const id = this.nextId();
-    const packet = encodePacket({ id, type: 2, body: command });
-
     return new Promise((resolve, reject) => {
-      this.pending.set(id, resolve);
-      this.socket.write(packet, (err) => {
+      if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+        return reject(new Error("WebSocket not open."));
+      }
+
+      this.requestId++;
+      this.pending.set(this.requestId, resolve);
+
+      const packet = {
+        Identifier: this.requestId,
+        Message: command,
+        Name: "WebRcon",
+      };
+
+      this.socket.send(JSON.stringify(packet), (err) => {
         if (err) {
-          this.pending.delete(id);
+          this.pending.delete(this.requestId);
           reject(err);
         }
       });
@@ -53,70 +72,27 @@ export class Rcon extends EventEmitter {
   }
 
   end(): void {
-    this.socket.end();
+    if (this.socket) {
+      this.socket.close();
+    }
   }
 
-  private nextId(): number {
-    this.requestId += 1;
-    return this.requestId;
-  }
+  public static connect(options: RconOptions): Promise<Rcon> {
+    const rcon = new Rcon(options);
+    return new Promise<Rcon>((resolve, reject) => {
+      const onError = (err: Error): void => {
+        rcon.end();
+        reject(err);
+      };
 
-  private onConnect = () => {
-    this.emit("connect");
-    this.authenticate();
-  };
+      rcon.once("authenticated", () => {
+        rcon.off("error", onError);
+        resolve(rcon);
+      });
 
-  private authenticate(): void {
-    this.authId = this.nextId();
-    const packet = encodePacket({
-      id: this.authId,
-      type: 3,
-      body: this.options.password,
+      rcon.once("error", onError);
+
+      rcon.connect();
     });
-    this.socket.write(packet);
-  }
-
-  private onData = (chunk: Buffer) => {
-    this.buffer = Buffer.concat([this.buffer, chunk]);
-
-    while (this.buffer.length >= 4) {
-      const length = this.buffer.readInt32LE(0);
-      if (this.buffer.length < length + 4) break;
-      const packetBuffer = this.buffer.subarray(0, length + 4);
-      this.buffer = this.buffer.subarray(length + 4);
-
-      let packet: RconPacket;
-      try {
-        packet = decodePacket(packetBuffer);
-      } catch (err) {
-        this.emit("error", err);
-        continue;
-      }
-
-      this.handlePacket(packet);
-    }
-  };
-
-  private handlePacket(packet: RconPacket): void {
-    if (
-      this.authId !== null &&
-      packet.id === this.authId &&
-      packet.type === 2
-    ) {
-      if (packet.id === -1) {
-        this.emit("error", new Error("Authentication failed"));
-        this.socket.end();
-      } else {
-        this.emit("authenticated");
-      }
-      return;
-    }
-
-    const pending = this.pending.get(packet.id);
-    if (pending) {
-      this.pending.delete(packet.id);
-      pending(packet.body);
-    }
-    this.emit("response", packet.body);
   }
 }
