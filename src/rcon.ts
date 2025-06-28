@@ -5,6 +5,7 @@ export interface RconOptions {
   host: string;
   port: number;
   password: string;
+  secure?: boolean;
 }
 
 export class Rcon extends EventEmitter {
@@ -19,7 +20,8 @@ export class Rcon extends EventEmitter {
   }
 
   connect(): void {
-    const url = `ws://${this.options.host}:${this.options.port}/${this.options.password}`;
+    const protocol = this.options.secure ? "wss" : "ws";
+    const url = `${protocol}://${this.options.host}:${this.options.port}/${this.options.password}`;
     this.socket = new WebSocket(url);
 
     this.socket.on("open", () => {

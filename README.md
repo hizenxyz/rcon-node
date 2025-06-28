@@ -96,6 +96,7 @@ To run it, you first need to create a `.env.local` file in the root of the proje
 RCON_HOST=127.0.0.1
 RCON_PORT=25575
 RCON_PASSWORD=secret
+RCON_SECURE=false # Set to true for wss:// connections
 ```
 
 Then, you can run the integration tests using the following command:

@@ -4,6 +4,7 @@ import { Rcon } from "../../src/index";
 const host = process.env.RCON_HOST;
 const port = process.env.RCON_PORT;
 const password = process.env.RCON_PASSWORD;
+const secure = process.env.RCON_SECURE === "true";
 
 const missing = !host || !port || !password;
 
@@ -17,6 +18,7 @@ describe("RCON integration", () => {
           host: host!,
           port: parseInt(port!, 10),
           password: password!,
+          secure,
         });
         expect(rcon).toBeInstanceOf(Rcon);
         const response = await rcon.send("echo test");
