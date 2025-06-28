@@ -48,6 +48,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,js,json}\" \"tests/**/*.{ts,js,json}\" \"*.{js,json,md}\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:fast": "vitest run --exclude tests/integration/*",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
