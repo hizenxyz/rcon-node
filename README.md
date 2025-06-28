@@ -90,16 +90,21 @@ To get started with development:
 ### Manual integration test
 
 The test suite includes an optional integration test that connects to a real RCON server.
-To run it, set the following environment variables before executing `npm test`:
+To run it, you first need to create a `.env.local` file in the root of the project with the following content:
 
 ```bash
-export RCON_HOST=127.0.0.1
-export RCON_PORT=25575
-export RCON_PASSWORD=secret
-npm test
+RCON_HOST=127.0.0.1
+RCON_PORT=25575
+RCON_PASSWORD=secret
 ```
 
-If these variables are not set, the integration test will be skipped.
+Then, you can run the integration tests using the following command:
+
+```bash
+npm run test:integration
+```
+
+If the `.env.local` file is not present or is missing variables, the integration test will be skipped. `vitest` automatically loads the environment variables from this file.
 
 ## Contributing
 

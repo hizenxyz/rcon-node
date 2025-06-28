@@ -34,9 +34,9 @@
   ],
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
   "scripts": {
@@ -51,6 +51,7 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run tests/integration",
     "ci": "npm run typecheck && npm run lint && npm run test",
     "prepublishOnly": "npm run ci && npm run build",
     "release:patch": "npm version patch && git push origin main --follow-tags",
