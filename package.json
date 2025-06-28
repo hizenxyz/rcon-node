@@ -1,0 +1,81 @@
+{
+  "name": "rcon-client",
+  "version": "0.0.0",
+  "description": "A TypeScript RCON client library for modern game servers.",
+  "author": "hizenxyz",
+  "license": "MIT",
+  "homepage": "https://github.com/hizenxyz/rcon-node#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hizenxyz/rcon-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hizenxyz/rcon-node/issues"
+  },
+  "keywords": [
+    "rcon",
+    "7-days-to-die",
+    "ark",
+    "dayz",
+    "minecraft",
+    "palworld",
+    "arma-reforger",
+    "rust",
+    "scum",
+    "valheim"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/**/*.ts tests/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts tests/**/*.ts --fix",
+    "format": "prettier --write \"src/**/*.{ts,js,json}\" \"tests/**/*.{ts,js,json}\" \"*.{js,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js,json}\" \"tests/**/*.{ts,js,json}\" \"*.{js,json,md}\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "ci": "npm run typecheck && npm run lint && npm run test",
+    "prepublishOnly": "npm run ci && npm run build",
+    "release:patch": "npm version patch && git push origin main --follow-tags",
+    "release:minor": "npm version minor && git push origin main --follow-tags",
+    "release:major": "npm version major && git push origin main --follow-tags"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/js": "^9.29.0",
+    "@types/node": "^24.0.4",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "@vitest/ui": "^3.2.4",
+    "eslint": "^9.29.0",
+    "lefthook": "^1.11.14",
+    "prettier": "^3.6.1",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.35.0",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

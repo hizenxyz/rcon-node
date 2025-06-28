@@ -1,0 +1,100 @@
+# rcon-client
+
+[![CI](https://github.com/hizenxyz/rcon-node/actions/workflows/ci.yml/badge.svg)](https://github.com/hizenxyz/rcon-node/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/rcon-client.svg)](https://www.npmjs.com/package/rcon-client)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A TypeScript RCON client library for modern game servers.
+
+This library allows you to connect to game servers using the RCON protocol to execute commands.
+
+⚠️ **Note**: This is a new library and is under active development. The API may change.
+
+## Features
+
+- **Modern:** Uses modern TypeScript and ES modules.
+- **Multi-Game Support:** Designed to support a variety of popular games.
+- **Extensible:** Easily extendable to support new games and commands.
+- **Lightweight:** No unnecessary dependencies.
+
+## Supported Games
+
+- [ ] 7 Days to Die
+- [ ] ARK: Survival Evolved
+- [ ] DayZ
+- [ ] Minecraft
+- [ ] Palworld
+- [ ] Arma Reforger
+- [ ] Rust
+- [ ] SCUM
+- [ ] Valheim
+
+## Installation
+
+```bash
+npm install rcon-client
+```
+
+## Quick Start
+
+```typescript
+import { Rcon } from "rcon-client";
+
+const rcon = new Rcon({
+  host: "localhost",
+  port: 25575,
+  password: "password",
+});
+
+rcon.on("connect", () => {
+  console.log("Connected to RCON server!");
+});
+
+rcon.on("authenticated", () => {
+  console.log("Authenticated!");
+  rcon.send("say Hello from rcon-client!");
+});
+
+rcon.on("response", (response) => {
+  console.log("Server response:", response);
+});
+
+rcon.on("error", (error) => {
+  console.error("RCON error:", error);
+});
+
+rcon.on("end", () => {
+  console.log("RCON connection closed.");
+});
+
+rcon.connect();
+```
+
+## Development
+
+To get started with development:
+
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/hizenxyz/rcon-node.git
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Run the tests:
+    ```bash
+    npm test
+    ```
+
+## Contributing
+
+Contributions are welcome! If you'd like to add support for a new game, fix a bug, or improve the library, please open an issue or submit a pull request.
+
+## Support
+
+If you find this project helpful, consider supporting me on [Ko-fi](https://ko-fi.com/hizenxyz) ☕
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
