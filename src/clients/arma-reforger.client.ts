@@ -123,4 +123,11 @@ export class ArmaReforgerClient extends BaseClient {
       this.socket = null;
     }
   }
+
+  public async testAuthentication(): Promise<void> {
+    const response = await this.send("players");
+    if (!response.toLowerCase().includes("players")) {
+      throw new Error("Authentication failed.");
+    }
+  }
 }

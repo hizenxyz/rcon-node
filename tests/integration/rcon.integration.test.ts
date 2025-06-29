@@ -34,20 +34,24 @@ describe("RCON integration", () => {
     10000
   );
 
-  it.skipIf(missing)("throws an error with wrong password", async () => {
-    let rcon: Rcon | null = null;
-    await expect(async () => {
-      try {
-        rcon = await Rcon.connect({
-          host: host!,
-          port: parseInt(port!, 10),
-          password: `${password!}invalid`,
-          game,
-          secure,
-        });
-      } finally {
-        rcon?.end();
-      }
-    }).rejects.toThrow();
-  });
+  it.skipIf(missing)(
+    "throws an error with wrong password",
+    async () => {
+      let rcon: Rcon | null = null;
+      await expect(async () => {
+        try {
+          rcon = await Rcon.connect({
+            host: host!,
+            port: parseInt(port!, 10),
+            password: `${password!}invalid`,
+            game,
+            secure,
+          });
+        } finally {
+          rcon?.end();
+        }
+      }).rejects.toThrow();
+    },
+    10000
+  );
 });

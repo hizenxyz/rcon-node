@@ -8,6 +8,11 @@ export class SevenDaysToDieClient extends BaseClient {
 
   public connect(): Promise<void> {
     return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        this.end();
+        reject(new Error("Authentication timed out."));
+      }, this.options.timeout ?? 5000);
+
       this.socket = createConnection(
         {
           host: this.options.host,
@@ -25,9 +30,11 @@ export class SevenDaysToDieClient extends BaseClient {
             await readUntil(this.socket, /Press 'exit' to end session/i);
             this.authenticated = true;
             this.emit("authenticated");
+            clearTimeout(timeout);
             resolve();
           } catch (err) {
             this.end();
+            clearTimeout(timeout);
             reject(err as Error);
           }
         }
