@@ -5,7 +5,9 @@ This document provides examples of how to use `rcon-node` to connect to the vari
 ## Table of Contents
 
 - [7 Days to Die](#connecting-to-a-7-days-to-die-server)
+- [ARK: Survival Evolved](#connecting-to-an-ark-survival-evolved-server)
 - [Arma Reforger](#connecting-to-an-arma-reforger-server)
+- [DayZ](#connecting-to-a-dayz-server)
 - [Minecraft](#connecting-to-a-minecraft-server)
 - [Rust](#connecting-to-a-rust-server)
 
@@ -37,6 +39,32 @@ rcon.end();
 
 ---
 
+## Connecting to an ARK: Survival Evolved Server
+
+ARK: Survival Evolved uses the standard Source RCON protocol over a TCP connection. You can find the unofficial but widely-accepted protocol specification on the [Valve Developer Wiki](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol).
+
+The client implementation for this game can be found at [`src/clients/ark-survival-evolved.client.ts`](./src/clients/ark-survival-evolved.client.ts).
+
+```typescript
+import { Rcon, Game } from "rcon-node";
+
+// Connect to an ARK: Survival Evolved server
+const rcon = await Rcon.connect({
+  host: "your.server.ip",
+  port: 27020, // Your RCON port
+  password: "your_password",
+  game: Game.ARK_SURVIVAL_EVOLVED,
+});
+
+// Get a list of players
+const response = await rcon.send("ListPlayers");
+console.log(response);
+
+rcon.end();
+```
+
+---
+
 ## Connecting to an Arma Reforger Server
 
 Arma Reforger uses the BattlEye RCON protocol over UDP. The library handles the specifics of this protocol, including packet structure, checksums, and keep-alive messages. You can find the official protocol specification [here](https://www.battleye.com/downloads/BERConProtocol.txt).
@@ -52,6 +80,32 @@ const rcon = await Rcon.connect({
   port: 2002, // Your BattlEye RCON port
   password: "your_password",
   game: Game.ARMA_REFORGER,
+});
+
+// Get a list of players
+const response = await rcon.send("players");
+console.log(response);
+
+rcon.end();
+```
+
+---
+
+## Connecting to a DayZ Server
+
+DayZ uses the BattlEye RCON protocol over UDP. The library handles the specifics of this protocol, including packet structure, checksums, and keep-alive messages. You can find the official protocol specification [here](https://www.battleye.com/downloads/BERConProtocol.txt).
+
+The client implementation for this game can be found at [`src/clients/dayz.client.ts`](./src/clients/dayz.client.ts).
+
+```typescript
+import { Rcon, Game } from "rcon-node";
+
+// Connect to a DayZ server
+const rcon = await Rcon.connect({
+  host: "your.server.ip",
+  port: 2304, // Your BattlEye RCON port
+  password: "your_password",
+  game: Game.DAYZ,
 });
 
 // Get a list of players

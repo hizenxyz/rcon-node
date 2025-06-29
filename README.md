@@ -21,17 +21,24 @@ We welcome and encourage community contributions to expand functionality and imp
 
 ## Game Status
 
-### Supported
+All games listed below are supported/tested for connection and authentication. While the core functionality is in place, please be aware that advanced command handling for some games may be a partial implementation. We welcome and encourage community contributions to expand functionality and improve compatibility.
+
+Additionally, this is based on a default implementation of the vanilla server installs. Advanced modding or custom installs may potentially break functionality.
+
+### Supported and Tested
 
 - [x] 7 Days to Die
-- [x] Minecraft
 - [x] Arma Reforger
+- [x] DayZ
+- [x] Minecraft
 - [x] Rust
+
+### In Testing
+
+- [ ] ARK: Survival Evolved
 
 ### In Progress
 
-- [ ] ARK: Survival Evolved
-- [ ] DayZ
 - [ ] Palworld
 - [ ] SCUM
 - [ ] Valheim
