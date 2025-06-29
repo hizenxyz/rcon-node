@@ -120,4 +120,11 @@ export class ScumClient extends BaseClient {
       this.socket = null;
     }
   }
+
+  public async testAuthentication(): Promise<void> {
+    const response = await this.send("players");
+    if (!response.toLowerCase().includes("player")) {
+      throw new Error("Authentication failed.");
+    }
+  }
 }
