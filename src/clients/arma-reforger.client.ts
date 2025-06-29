@@ -1,15 +1,17 @@
 import { Socket, createSocket } from "node:dgram";
 import { BaseClient } from "./base.client";
 import {
-  ArmaReforgerResponseType,
-  createAuthPacket,
+  ArmaReforgerPacketType,
+  createAckPacket,
   createCommandPacket,
+  createLoginPacket,
   parsePacket,
 } from "../utils/arma-reforger.utils";
 
 export class ArmaReforgerClient extends BaseClient {
   private socket: Socket | null = null;
   private seq = 0;
+  private keepAlive: NodeJS.Timeout | null = null;
 
   public connect(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -23,13 +25,18 @@ export class ArmaReforgerClient extends BaseClient {
 
       const onMessage = (msg: Buffer): void => {
         const packet = parsePacket(msg);
-        if (packet.type === ArmaReforgerResponseType.AUTH) {
+        if (packet.type === ArmaReforgerPacketType.LOGIN) {
           socket.off("message", onMessage);
           clearTimeout(timeout);
           if (packet.success) {
             this.emit("connect");
             this.emit("authenticated");
             socket.on("message", (data) => this.handleMessage(data));
+            this.keepAlive = setInterval(() => {
+              // BattlEye requires a keep-alive packet every <45 seconds.
+              // An empty command packet is sufficient.
+              this.send("");
+            }, 30_000);
             resolve();
           } else {
             socket.close();
@@ -43,17 +50,34 @@ export class ArmaReforgerClient extends BaseClient {
         socket.close();
         reject(err);
       });
-      socket.on("close", () => this.emit("end"));
+      socket.on("close", () => {
+        if (this.keepAlive) {
+          clearInterval(this.keepAlive);
+        }
+        this.emit("end");
+      });
 
-      const packet = createAuthPacket(this.options.password);
+      const packet = createLoginPacket(this.options.password);
       socket.send(packet, this.options.port, this.options.host);
     });
   }
 
   private handleMessage(msg: Buffer): void {
-    const packet = parsePacket(msg);
-    if (packet.type === ArmaReforgerResponseType.COMMAND) {
-      this.emit("response", packet.payload);
+    try {
+      const packet = parsePacket(msg);
+
+      if (packet.type === ArmaReforgerPacketType.MESSAGE) {
+        this.emit("response", packet.payload.toString("ascii"));
+        if (this.socket) {
+          const ack = createAckPacket(packet.seq);
+          this.socket.send(ack, this.options.port, this.options.host);
+        }
+      } else if (packet.type === ArmaReforgerPacketType.COMMAND) {
+        // These are responses to commands sent via `send()`
+        // and are handled by listeners on the socket there.
+      }
+    } catch (e) {
+      this.emit("error", e as Error);
     }
   }
 
@@ -63,17 +87,23 @@ export class ArmaReforgerClient extends BaseClient {
         return reject(new Error("Socket not connected."));
       }
 
-      const seq = this.seq++ & 0xff;
+      const seq = this.seq;
+      this.seq = (this.seq + 1) & 0xff;
+
       const packet = createCommandPacket(seq, command);
 
       const onMessage = (msg: Buffer): void => {
-        const data = parsePacket(msg);
-        if (
-          data.type === ArmaReforgerResponseType.COMMAND &&
-          data.seq === seq
-        ) {
-          this.socket?.off("message", onMessage);
-          resolve(data.payload);
+        try {
+          const data = parsePacket(msg);
+          if (
+            data.type === ArmaReforgerPacketType.COMMAND &&
+            data.seq === seq
+          ) {
+            this.socket?.off("message", onMessage);
+            resolve(data.payload.toString("ascii"));
+          }
+        } catch {
+          // Ignore parsing errors for other packet types
         }
       };
 

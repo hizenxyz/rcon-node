@@ -1,54 +1,100 @@
-export enum ArmaReforgerPacketType {
-  AUTH = 0,
-  COMMAND = 1,
-}
+import crc32 from "crc-32";
 
-export enum ArmaReforgerResponseType {
-  AUTH = 0,
-  COMMAND = 1,
+export enum ArmaReforgerPacketType {
+  LOGIN = 0x00,
+  COMMAND = 0x01,
+  MESSAGE = 0x02,
 }
 
 export interface ParsedPacket {
-  type: ArmaReforgerResponseType;
+  type: ArmaReforgerPacketType;
   seq: number;
-  payload: string;
+  payload: Buffer;
   success?: boolean;
 }
 
-export function createAuthPacket(password: string): Buffer {
-  const pw = Buffer.from(password, "utf8");
-  const buf = Buffer.alloc(6 + pw.length);
-  buf.write("BE", 0, "ascii");
-  buf.writeUInt8(0x00, 2);
-  buf.writeUInt8(0xff, 3);
-  buf.writeUInt8(ArmaReforgerPacketType.AUTH, 4);
-  pw.copy(buf, 5);
-  buf.writeUInt8(0x00, 5 + pw.length);
-  return buf;
-}
+const HEADER = Buffer.from([0x42, 0x45]);
 
-export function createCommandPacket(seq: number, command: string): Buffer {
-  const cmd = Buffer.from(command, "utf8");
-  const buf = Buffer.alloc(6 + cmd.length);
-  buf.write("BE", 0, "ascii");
-  buf.writeUInt8(0x00, 2);
-  buf.writeUInt8(seq & 0xff, 3);
-  buf.writeUInt8(ArmaReforgerPacketType.COMMAND, 4);
-  cmd.copy(buf, 5);
-  buf.writeUInt8(0x00, 5 + cmd.length);
-  return buf;
-}
+const createPayload = (
+  type: ArmaReforgerPacketType,
+  ...args: (string | number | Buffer)[]
+): Buffer => {
+  const parts: Buffer[] = [Buffer.from([type])];
+  for (const arg of args) {
+    if (typeof arg === "string") {
+      parts.push(Buffer.from(arg, "ascii"));
+    } else if (typeof arg === "number") {
+      parts.push(Buffer.from([arg]));
+    } else {
+      parts.push(arg);
+    }
+  }
 
-export function parsePacket(buf: Buffer): ParsedPacket {
-  const type =
-    buf[4] === ArmaReforgerPacketType.AUTH
-      ? ArmaReforgerResponseType.AUTH
-      : ArmaReforgerResponseType.COMMAND;
-  const seq = buf[3];
-  const payload = buf.toString("utf8", 5, buf.length);
-  const success =
-    type === ArmaReforgerResponseType.AUTH
-      ? payload.trim() === "OK"
-      : undefined;
-  return { type, seq, payload, success };
-}
+  return Buffer.concat(parts);
+};
+
+const buildPacket = (payload: Buffer): Buffer => {
+  const checksumContent = Buffer.concat([Buffer.from([0xff]), payload]);
+  const checksum = Buffer.alloc(4);
+  checksum.writeInt32LE(crc32.buf(checksumContent), 0);
+
+  // 0xFF is also part of the final packet header
+  return Buffer.concat([HEADER, checksum, Buffer.from([0xff]), payload]);
+};
+
+export const createLoginPacket = (password: string): Buffer => {
+  const payload = createPayload(ArmaReforgerPacketType.LOGIN, password);
+  return buildPacket(payload);
+};
+
+export const createCommandPacket = (seq: number, command: string): Buffer => {
+  const payload = createPayload(ArmaReforgerPacketType.COMMAND, seq, command);
+  return buildPacket(payload);
+};
+
+export const createAckPacket = (seq: number): Buffer => {
+  const payload = createPayload(ArmaReforgerPacketType.MESSAGE, seq);
+  return buildPacket(payload);
+};
+
+export const parsePacket = (buf: Buffer): ParsedPacket => {
+  if (buf.toString("ascii", 0, 2) !== "BE") {
+    throw new Error("Invalid BattlEye packet header.");
+  }
+
+  const payload = buf.slice(7);
+
+  const checksumContent = Buffer.concat([Buffer.from([0xff]), payload]);
+  const checksum = buf.readInt32LE(2);
+  const receivedChecksum = crc32.buf(checksumContent);
+
+  if (checksum !== receivedChecksum) {
+    throw new Error(
+      `Invalid checksum. Expected ${receivedChecksum} but got ${checksum}`
+    );
+  }
+
+  const type = payload.readUInt8(0);
+  let seq = -1;
+  let body: Buffer;
+  let success: boolean | undefined = undefined;
+
+  switch (type) {
+    case ArmaReforgerPacketType.LOGIN:
+      success = payload.readUInt8(1) === 1;
+      body = payload.slice(2);
+      break;
+    case ArmaReforgerPacketType.COMMAND:
+      seq = payload.readUInt8(1);
+      body = payload.slice(2);
+      break;
+    case ArmaReforgerPacketType.MESSAGE:
+      seq = payload.readUInt8(1);
+      body = payload.slice(2);
+      break;
+    default:
+      throw new Error("Unknown packet type");
+  }
+
+  return { type, seq, payload: body, success };
+};

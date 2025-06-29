@@ -28,9 +28,17 @@ describe("RCON integration", () => {
         });
         expect(rcon).toBeInstanceOf(Rcon);
         const command =
-          game === Game.SEVEN_DAYS_TO_DIE ? "version" : "echo test";
+          game === Game.ARMA_REFORGER
+            ? "players"
+            : game === Game.SEVEN_DAYS_TO_DIE
+              ? "version"
+              : "echo test";
         const expectedResponse =
-          game === Game.SEVEN_DAYS_TO_DIE ? "Version" : "test";
+          game === Game.ARMA_REFORGER
+            ? "Players on server"
+            : game === Game.SEVEN_DAYS_TO_DIE
+              ? "Version"
+              : "test";
         const response = await rcon.send(command);
         expect(response).toContain(expectedResponse);
       } finally {
