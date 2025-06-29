@@ -41,29 +41,20 @@ npm install rcon-node
 import { Rcon, Game } from "rcon-node";
 
 // Connect to a Minecraft server
-const minecraftRcon = await Rcon.connect({
+const rcon = await Rcon.connect({
   host: "localhost",
   port: 25575,
   password: "password",
   game: Game.MINECRAFT,
 });
 
-const response = await minecraftRcon.send("say Hello from rcon-node!");
+const response = await rcon.send("say Hello from rcon-node!");
 console.log(response);
-minecraftRcon.end();
 
-// Connect to a Rust server
-const rustRcon = await Rcon.connect({
-  host: "localhost",
-  port: 28016,
-  password: "password",
-  game: Game.RUST,
-});
-
-const rustResponse = await rustRcon.send("say Hello from rcon-node!");
-console.log(rustResponse);
-rustRcon.end();
+rcon.end();
 ```
+
+For a fully redudant example set, please see the [Usage Guide](USAGE.md).
 
 ## Development
 
