@@ -1,13 +1,13 @@
 import crc32 from "crc-32";
 
-export enum DayZPacketType {
+export enum BattlEyePacketType {
   LOGIN = 0x00,
   COMMAND = 0x01,
   MESSAGE = 0x02,
 }
 
-export interface ParsedPacket {
-  type: DayZPacketType;
+export interface ParsedBattlEyePacket {
+  type: BattlEyePacketType;
   seq: number;
   payload: Buffer;
   success?: boolean;
@@ -16,7 +16,7 @@ export interface ParsedPacket {
 const HEADER = Buffer.from([0x42, 0x45]);
 
 const createPayload = (
-  type: DayZPacketType,
+  type: BattlEyePacketType,
   ...args: (string | number | Buffer)[]
 ): Buffer => {
   const parts: Buffer[] = [Buffer.from([type])];
@@ -43,21 +43,21 @@ const buildPacket = (payload: Buffer): Buffer => {
 };
 
 export const createLoginPacket = (password: string): Buffer => {
-  const payload = createPayload(DayZPacketType.LOGIN, password);
+  const payload = createPayload(BattlEyePacketType.LOGIN, password);
   return buildPacket(payload);
 };
 
 export const createCommandPacket = (seq: number, command: string): Buffer => {
-  const payload = createPayload(DayZPacketType.COMMAND, seq, command);
+  const payload = createPayload(BattlEyePacketType.COMMAND, seq, command);
   return buildPacket(payload);
 };
 
 export const createAckPacket = (seq: number): Buffer => {
-  const payload = createPayload(DayZPacketType.MESSAGE, seq);
+  const payload = createPayload(BattlEyePacketType.MESSAGE, seq);
   return buildPacket(payload);
 };
 
-export const parsePacket = (buf: Buffer): ParsedPacket => {
+export const parseBattlEyePacket = (buf: Buffer): ParsedBattlEyePacket => {
   if (buf.toString("ascii", 0, 2) !== "BE") {
     throw new Error("Invalid BattlEye packet header.");
   }
@@ -80,15 +80,15 @@ export const parsePacket = (buf: Buffer): ParsedPacket => {
   let success: boolean | undefined = undefined;
 
   switch (type) {
-    case DayZPacketType.LOGIN:
+    case BattlEyePacketType.LOGIN:
       success = payload.readUInt8(1) === 1;
       body = payload.slice(2);
       break;
-    case DayZPacketType.COMMAND:
+    case BattlEyePacketType.COMMAND:
       seq = payload.readUInt8(1);
       body = payload.slice(2);
       break;
-    case DayZPacketType.MESSAGE:
+    case BattlEyePacketType.MESSAGE:
       seq = payload.readUInt8(1);
       body = payload.slice(2);
       break;
