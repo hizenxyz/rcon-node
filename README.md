@@ -34,13 +34,10 @@ Additionally, this is based on a default implementation of the vanilla server in
 - [x] Minecraft
 - [x] Rust
 - [x] Palworld
+- [x] SCUM
 - [x] Valheim
 
 ### In Testing
-
-### In Progress
-
-- [ ] SCUM
 
 > **Note**
 > Valheim does not include native RCON functionality. Integration with this library only works when using the
