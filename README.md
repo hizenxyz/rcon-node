@@ -19,15 +19,20 @@ We welcome and encourage community contributions to expand functionality and imp
 - **Extensible:** Easily extendable to support new games and commands.
 - **Lightweight:** No unnecessary dependencies.
 
-## Supported Games
+## Game Status
+
+### Supported
 
 - [x] 7 Days to Die
-- [ ] ARK: Survival Evolved
-- [ ] DayZ
 - [x] Minecraft
-- [ ] Palworld
 - [x] Arma Reforger
 - [x] Rust
+
+### In Progress
+
+- [ ] ARK: Survival Evolved
+- [ ] DayZ
+- [ ] Palworld
 - [ ] SCUM
 - [ ] Valheim
 
