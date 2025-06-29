@@ -1,45 +1,100 @@
-export const SCUM_PACKET_TYPE_LOGIN = 0x00;
-export const SCUM_PACKET_TYPE_COMMAND = 0x01;
-export const SCUM_PACKET_TYPE_MESSAGE = 0x02;
+import crc32 from "crc-32";
 
-export interface ScumPacket {
-  type: number;
-  id: number;
-  payload: string;
+export enum ScumPacketType {
+  LOGIN = 0x00,
+  COMMAND = 0x01,
+  MESSAGE = 0x02,
 }
 
-export function createLoginPacket(password: string): Buffer {
-  const pwd = Buffer.from(password + "\0", "utf8");
-  const buf = Buffer.alloc(7 + pwd.length);
-  buf.write("BE", 0, "ascii");
-  buf.writeUInt8(SCUM_PACKET_TYPE_LOGIN, 2);
-  buf.writeUInt32BE(0, 3); // login has id 0
-  pwd.copy(buf, 7);
-  return buf;
+export interface ParsedPacket {
+  type: ScumPacketType;
+  seq: number;
+  payload: Buffer;
+  success?: boolean;
 }
 
-export function createCommandPacket(
-  sessionId: number,
-  id: number,
-  command: string
-): Buffer {
-  const body = Buffer.from(command + "\0", "utf8");
-  const buf = Buffer.alloc(11 + body.length);
-  buf.write("BE", 0, "ascii");
-  buf.writeUInt8(SCUM_PACKET_TYPE_COMMAND, 2);
-  buf.writeUInt32BE(sessionId, 3);
-  buf.writeUInt32BE(id, 7);
-  body.copy(buf, 11);
-  return buf;
-}
+const HEADER = Buffer.from([0x42, 0x45]);
 
-export function parsePacket(data: Buffer): ScumPacket {
-  if (data.toString("ascii", 0, 2) !== "BE") {
-    throw new Error("Invalid packet header");
+const createPayload = (
+  type: ScumPacketType,
+  ...args: (string | number | Buffer)[]
+): Buffer => {
+  const parts: Buffer[] = [Buffer.from([type])];
+  for (const arg of args) {
+    if (typeof arg === "string") {
+      parts.push(Buffer.from(arg, "ascii"));
+    } else if (typeof arg === "number") {
+      parts.push(Buffer.from([arg]));
+    } else {
+      parts.push(arg);
+    }
   }
-  const type = data.readUInt8(2);
-  const id = data.readUInt32BE(3);
-  const payload =
-    data.length > 7 ? data.toString("utf8", 7).replace(/\0+$/, "") : "";
-  return { type, id, payload };
-}
+
+  return Buffer.concat(parts);
+};
+
+const buildPacket = (payload: Buffer): Buffer => {
+  const checksumContent = Buffer.concat([Buffer.from([0xff]), payload]);
+  const checksum = Buffer.alloc(4);
+  checksum.writeInt32LE(crc32.buf(checksumContent), 0);
+
+  // 0xFF is also part of the final packet header
+  return Buffer.concat([HEADER, checksum, Buffer.from([0xff]), payload]);
+};
+
+export const createLoginPacket = (password: string): Buffer => {
+  const payload = createPayload(ScumPacketType.LOGIN, password);
+  return buildPacket(payload);
+};
+
+export const createCommandPacket = (seq: number, command: string): Buffer => {
+  const payload = createPayload(ScumPacketType.COMMAND, seq, command);
+  return buildPacket(payload);
+};
+
+export const createAckPacket = (seq: number): Buffer => {
+  const payload = createPayload(ScumPacketType.MESSAGE, seq);
+  return buildPacket(payload);
+};
+
+export const parsePacket = (buf: Buffer): ParsedPacket => {
+  if (buf.toString("ascii", 0, 2) !== "BE") {
+    throw new Error("Invalid BattlEye packet header.");
+  }
+
+  const payload = buf.slice(7);
+
+  const checksumContent = Buffer.concat([Buffer.from([0xff]), payload]);
+  const checksum = buf.readInt32LE(2);
+  const receivedChecksum = crc32.buf(checksumContent);
+
+  if (checksum !== receivedChecksum) {
+    throw new Error(
+      `Invalid checksum. Expected ${receivedChecksum} but got ${checksum}`
+    );
+  }
+
+  const type = payload.readUInt8(0);
+  let seq = -1;
+  let body: Buffer;
+  let success: boolean | undefined = undefined;
+
+  switch (type) {
+    case ScumPacketType.LOGIN:
+      success = payload.readUInt8(1) === 1;
+      body = payload.slice(2);
+      break;
+    case ScumPacketType.COMMAND:
+      seq = payload.readUInt8(1);
+      body = payload.slice(2);
+      break;
+    case ScumPacketType.MESSAGE:
+      seq = payload.readUInt8(1);
+      body = payload.slice(2);
+      break;
+    default:
+      throw new Error("Unknown packet type");
+  }
+
+  return { type, seq, payload: body, success };
+};
