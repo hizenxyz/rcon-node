@@ -1,7 +1,7 @@
 # rcon-node
 
 [![CI](https://github.com/hizenxyz/rcon-node/actions/workflows/ci.yml/badge.svg)](https://github.com/hizenxyz/rcon-node/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/rcon-client.svg)](https://www.npmjs.com/package/rcon-node)
+[![npm version](https://img.shields.io/npm/v/rcon-node.svg)](https://www.npmjs.com/package/rcon-node)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A TypeScript RCON client library for modern game servers.
