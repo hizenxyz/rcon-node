@@ -90,8 +90,6 @@ export class PalworldClient extends BaseClient {
           } else if (id === this.requestId) {
             this.authCallback();
           }
-        } else if (type === PACKET_TYPE_RESPONSE) {
-          // Palworld may send an empty response during auth which can be ignored
         }
         continue;
       }
@@ -143,6 +141,16 @@ export class PalworldClient extends BaseClient {
     if (this.socket) {
       this.socket.end();
       this.socket = null;
+    }
+  }
+
+  public async testAuthentication(): Promise<void> {
+    try {
+      if (!this.connected) {
+        await this.connect();
+      }
+    } catch {
+      throw new Error("Authentication failed.");
     }
   }
 }
