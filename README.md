@@ -28,14 +28,13 @@ Additionally, this is based on a default implementation of the vanilla server in
 ### Supported and Tested
 
 - [x] 7 Days to Die
+- [x] ARK: Survival Evolved
 - [x] Arma Reforger
 - [x] DayZ
 - [x] Minecraft
 - [x] Rust
 
 ### In Testing
-
-- [ ] ARK: Survival Evolved
 
 ### In Progress
 
