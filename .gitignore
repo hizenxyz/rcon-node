@@ -118,3 +118,4 @@ deno.lock
 
 # Vitest
 coverage/
+src/bepinex_reference/

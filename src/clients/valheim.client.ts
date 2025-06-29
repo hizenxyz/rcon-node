@@ -156,4 +156,14 @@ export class ValheimClient extends BaseClient {
       this.socket = null;
     }
   }
+
+  public async testAuthentication(): Promise<void> {
+    try {
+      if (!this.connected) {
+        await this.connect();
+      }
+    } catch {
+      throw new Error("Authentication failed.");
+    }
+  }
 }

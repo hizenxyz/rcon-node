@@ -30,7 +30,7 @@ export function extractValheimPackets(buffer: Buffer): {
     const packetBuf = buffer.subarray(offset + 4, offset + 4 + size);
     const id = packetBuf.readInt32LE(0);
     const type = packetBuf.readInt32LE(4);
-    const body = packetBuf.toString("utf8", 8, packetBuf.length - 2);
+    const body = packetBuf.toString("ascii", 8, packetBuf.length - 2);
     packets.push({ id, type, body });
     offset += 4 + size;
   }
