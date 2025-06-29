@@ -42,6 +42,11 @@ Additionally, this is based on a default implementation of the vanilla server in
 - [ ] SCUM
 - [ ] Valheim
 
+> **Note**
+> Valheim does not include native RCON functionality. Integration with this library only works when using the
+> [rcon plugin](https://thunderstore.io/c/valheim/p/AviiNL/rcon/) from the
+> [BepInExPack](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/).
+
 ## Installation
 
 ```bash
