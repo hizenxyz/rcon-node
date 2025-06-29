@@ -9,6 +9,7 @@ This document provides examples of how to use `rcon-node` to connect to the vari
 - [Arma Reforger](#connecting-to-an-arma-reforger-server)
 - [DayZ](#connecting-to-a-dayz-server)
 - [Minecraft](#connecting-to-a-minecraft-server)
+- [Palworld](#connecting-to-a-palworld-server)
 - [Rust](#connecting-to-a-rust-server)
 
 ---
@@ -135,6 +136,31 @@ const rcon = await Rcon.connect({
 });
 
 const response = await rcon.send("say Hello from rcon-node!");
+console.log(response);
+
+rcon.end();
+```
+
+---
+
+## Connecting to a Palworld Server
+
+Palworld uses the standard Source RCON protocol over a TCP connection. The library handles authentication and packet parsing automatically.
+
+The client implementation for this game can be found at [`src/clients/palworld.client.ts`](./src/clients/palworld.client.ts).
+
+```typescript
+import { Rcon, Game } from "rcon-node";
+
+// Connect to a Palworld server
+const rcon = await Rcon.connect({
+  host: "localhost",
+  port: 25575,
+  password: "password",
+  game: Game.PALWORLD,
+});
+
+const response = await rcon.send("Info");
 console.log(response);
 
 rcon.end();

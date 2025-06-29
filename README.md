@@ -33,12 +33,12 @@ Additionally, this is based on a default implementation of the vanilla server in
 - [x] DayZ
 - [x] Minecraft
 - [x] Rust
+- [x] Palworld
 
 ### In Testing
 
 ### In Progress
 
-- [ ] Palworld
 - [ ] SCUM
 - [ ] Valheim
 
