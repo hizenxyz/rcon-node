@@ -8,7 +8,9 @@ A TypeScript RCON client library for modern game servers.
 
 This library allows you to connect to game servers using the RCON protocol to execute commands.
 
-⚠️ **Note**: This is a new library and is under active development. The API may change.
+⚠️ **A Note on Current Status**: This library is in active development, with a primary focus on ensuring reliable authentication with each supported game. While the connection and authentication processes are tested, please be aware that command handling for some games may be a partial implementation.
+
+We welcome and encourage community contributions to expand functionality and improve compatibility. If you encounter any bugs or have a feature request, please feel free to open an issue or submit a pull request.
 
 ## Features
 
