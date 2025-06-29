@@ -11,6 +11,7 @@ This document provides examples of how to use `rcon-node` to connect to the vari
 - [Minecraft](#connecting-to-a-minecraft-server)
 - [Palworld](#connecting-to-a-palworld-server)
 - [Rust](#connecting-to-a-rust-server)
+- [Valheim](#connecting-to-a-valheim-server)
 
 ---
 
@@ -136,6 +137,36 @@ const rcon = await Rcon.connect({
 });
 
 const response = await rcon.send("say Hello from rcon-node!");
+console.log(response);
+
+rcon.end();
+```
+
+---
+
+## Connecting to a Valheim Server
+
+Valheim does not include native RCON functionality. To use `rcon-node` you must
+install the [rcon](https://thunderstore.io/c/valheim/p/AviiNL/rcon/) plugin from
+the [BepInExPack](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/).
+After adding `rcon.dll` to your `BepInEx/plugins` folder, run the server once to
+generate `BepInEx/config/nl.avii.plugins.rcon.cfg`. Set `enabled` to `true`,
+choose a port and password, then restart the server.
+
+The client implementation can be found at [`src/clients/valheim.client.ts`](./src/clients/valheim.client.ts).
+
+```typescript
+import { Rcon, Game } from "rcon-node";
+
+// Connect to a Valheim server
+const rcon = await Rcon.connect({
+  host: "localhost",
+  port: 2458, // Port configured in the rcon plugin
+  password: "password",
+  game: Game.VALHEIM,
+});
+
+const response = await rcon.send("help");
 console.log(response);
 
 rcon.end();
