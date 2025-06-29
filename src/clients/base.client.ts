@@ -12,4 +12,11 @@ export abstract class BaseClient extends EventEmitter {
   abstract connect(): Promise<void>;
   abstract send(command: string): Promise<string>;
   abstract end(): void;
+
+  public async testAuthentication(): Promise<void> {
+    const response = await this.send("echo test");
+    if (!response.includes("test")) {
+      throw new Error("Authentication failed.");
+    }
+  }
 }

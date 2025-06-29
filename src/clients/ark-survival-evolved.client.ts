@@ -116,9 +116,20 @@ export class ArkSurvivalEvolvedClient extends BaseClient {
     }
   }
 
+  public get isAuthenticated(): boolean {
+    return this.authenticated;
+  }
+
+  public async testAuthentication(): Promise<void> {
+    const response = await this.send("ListPlayers");
+    if (!response.includes("No Players Connected")) {
+      throw new Error("Authentication failed.");
+    }
+  }
+
   public send(command: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      if (!this.authenticated) {
+      if (!this.isAuthenticated) {
         return reject(new Error("Not authenticated."));
       }
       this.sendPacket(PACKET_TYPE_COMMAND, command)

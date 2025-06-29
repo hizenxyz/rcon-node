@@ -77,6 +77,7 @@ export class Rcon extends EventEmitter {
   public static async connect(options: RconOptions): Promise<Rcon> {
     const rcon = new Rcon(options);
     await rcon.client.connect();
+    await rcon.client.testAuthentication();
     return rcon;
   }
 }
