@@ -122,7 +122,7 @@ export class ArkSurvivalEvolvedClient extends BaseClient {
 
   public async testAuthentication(): Promise<void> {
     const response = await this.send("ListPlayers");
-    if (!response.includes("No Players Connected")) {
+    if (!response.toLowerCase().includes("player")) {
       throw new Error("Authentication failed.");
     }
   }

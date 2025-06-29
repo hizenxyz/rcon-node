@@ -1,97 +1,83 @@
-import { createSocket, Socket } from "node:dgram";
+import { Socket, createSocket } from "node:dgram";
 import { BaseClient } from "./base.client";
 import {
-  createLoginPacket,
+  DayZPacketType,
+  createAckPacket,
   createCommandPacket,
+  createLoginPacket,
   parsePacket,
 } from "../utils/dayz.utils";
 
-export class DayzClient extends BaseClient {
+export class DayZClient extends BaseClient {
   private socket: Socket | null = null;
-  private sequence = 0;
-  private pending = new Map<number, (data: string) => void>();
-  private authCallback: ((err?: Error) => void) | null = null;
+  private seq = 0;
+  private keepAlive: NodeJS.Timeout | null = null;
 
   public connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.socket = createSocket("udp4");
-
-      const onError = (err: Error): void => {
-        this.end();
-        reject(err);
-      };
-
-      this.socket.once("error", onError);
-      this.socket.on("message", (msg) => this.onMessage(msg));
-      this.socket.on("close", () => this.emit("end"));
+      const socket = this.socket;
 
       const timeout = setTimeout(() => {
-        onError(new Error("Connection timed out."));
+        socket.close();
+        reject(new Error("Authentication timed out."));
       }, this.options.timeout ?? 5000);
 
-      this.socket.connect(this.options.port, this.options.host, () => {
-        clearTimeout(timeout);
-        this.emit("connect");
-        this.authenticate()
-          .then(() => {
-            this.socket?.off("error", onError);
+      const onMessage = (msg: Buffer): void => {
+        const packet = parsePacket(msg);
+        if (packet.type === DayZPacketType.LOGIN) {
+          socket.off("message", onMessage);
+          clearTimeout(timeout);
+          if (packet.success) {
+            this.emit("connect");
+            this.emit("authenticated");
+            socket.on("message", (data) => this.handleMessage(data));
+            this.keepAlive = setInterval(() => {
+              // BattlEye requires a keep-alive packet every <45 seconds.
+              // An empty command packet is sufficient.
+              this.send("");
+            }, 30_000);
             resolve();
-          })
-          .catch(reject);
-      });
-    });
-  }
-
-  private authenticate(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        this.authCallback?.(new Error("Authentication timed out."));
-      }, this.options.timeout ?? 5000);
-
-      this.authCallback = (err?: Error): void => {
-        clearTimeout(timeout);
-        if (err) {
-          this.end();
-          reject(err);
-        } else {
-          this.emit("authenticated");
-          resolve();
+          } else {
+            socket.close();
+            reject(new Error("Authentication failed."));
+          }
         }
-        this.authCallback = null;
       };
+
+      socket.on("message", onMessage);
+      socket.on("error", (err) => {
+        socket.close();
+        reject(err);
+      });
+      socket.on("close", () => {
+        if (this.keepAlive) {
+          clearInterval(this.keepAlive);
+        }
+        this.emit("end");
+      });
 
       const packet = createLoginPacket(this.options.password);
-      this.socket?.send(packet, (err) => {
-        if (err) {
-          this.authCallback?.(err);
-        }
-      });
+      socket.send(packet, this.options.port, this.options.host);
     });
   }
 
-  private onMessage(data: Buffer): void {
-    const packet = parsePacket(data);
-    if (!packet) {
-      return;
-    }
+  private handleMessage(msg: Buffer): void {
+    try {
+      const packet = parsePacket(msg);
 
-    if (packet.type === "auth") {
-      if (this.authCallback) {
-        if (packet.success) {
-          this.authCallback();
-        } else {
-          this.authCallback(new Error("Authentication failed."));
+      if (packet.type === DayZPacketType.MESSAGE) {
+        this.emit("response", packet.payload.toString("ascii"));
+        if (this.socket) {
+          const ack = createAckPacket(packet.seq);
+          this.socket.send(ack, this.options.port, this.options.host);
         }
+      } else if (packet.type === DayZPacketType.COMMAND) {
+        // These are responses to commands sent via `send()`
+        // and are handled by listeners on the socket there.
       }
-      return;
-    }
-
-    const resolver = this.pending.get(packet.sequence);
-    if (resolver) {
-      resolver(packet.payload ?? "");
-      this.pending.delete(packet.sequence);
-    } else if (packet.payload) {
-      this.emit("response", packet.payload);
+    } catch (e) {
+      this.emit("error", e as Error);
     }
   }
 
@@ -100,12 +86,28 @@ export class DayzClient extends BaseClient {
       if (!this.socket) {
         return reject(new Error("Socket not connected."));
       }
-      const seq = ++this.sequence % 256;
-      this.pending.set(seq, resolve);
+
+      const seq = this.seq;
+      this.seq = (this.seq + 1) & 0xff;
+
       const packet = createCommandPacket(seq, command);
-      this.socket.send(packet, (err) => {
+
+      const onMessage = (msg: Buffer): void => {
+        try {
+          const data = parsePacket(msg);
+          if (data.type === DayZPacketType.COMMAND && data.seq === seq) {
+            this.socket?.off("message", onMessage);
+            resolve(data.payload.toString("ascii"));
+          }
+        } catch {
+          // Ignore parsing errors for other packet types
+        }
+      };
+
+      this.socket.on("message", onMessage);
+      this.socket.send(packet, this.options.port, this.options.host, (err) => {
         if (err) {
-          this.pending.delete(seq);
+          this.socket?.off("message", onMessage);
           reject(err);
         }
       });
@@ -116,6 +118,13 @@ export class DayzClient extends BaseClient {
     if (this.socket) {
       this.socket.close();
       this.socket = null;
+    }
+  }
+
+  public async testAuthentication(): Promise<void> {
+    const response = await this.send("players");
+    if (!response.toLowerCase().includes("player")) {
+      throw new Error("Authentication failed.");
     }
   }
 }

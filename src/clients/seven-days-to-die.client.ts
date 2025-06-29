@@ -60,7 +60,7 @@ export class SevenDaysToDieClient extends BaseClient {
 
   public async testAuthentication(): Promise<void> {
     const response = await this.send("version");
-    if (!response.includes("Version")) {
+    if (!response.toLowerCase().includes("version")) {
       throw new Error("Authentication failed.");
     }
   }

@@ -1,57 +1,100 @@
-export enum DayzPacketType {
-  LOGIN = 0,
-  COMMAND = 1,
-  SERVER_MESSAGE = 2,
+import crc32 from "crc-32";
+
+export enum DayZPacketType {
+  LOGIN = 0x00,
+  COMMAND = 0x01,
+  MESSAGE = 0x02,
 }
 
-export interface DayzParsedPacket {
-  sequence: number;
-  type: "auth" | "response" | "server";
+export interface ParsedPacket {
+  type: DayZPacketType;
+  seq: number;
+  payload: Buffer;
   success?: boolean;
-  payload?: string;
 }
 
-export function createLoginPacket(password: string): Buffer {
-  const passBuf = Buffer.from(password, "utf8");
-  const buffer = Buffer.alloc(6 + passBuf.length);
-  buffer.write("BE", 0, 2, "ascii");
-  buffer[2] = 0x00;
-  buffer[3] = 0x00;
-  buffer[4] = 0xff;
-  buffer[5] = DayzPacketType.LOGIN;
-  passBuf.copy(buffer, 6);
-  return buffer;
-}
+const HEADER = Buffer.from([0x42, 0x45]);
 
-export function createCommandPacket(sequence: number, command: string): Buffer {
-  const cmdBuf = Buffer.from(command, "utf8");
-  const buffer = Buffer.alloc(6 + cmdBuf.length);
-  buffer.write("BE", 0, 2, "ascii");
-  buffer[2] = 0x00;
-  buffer[3] = sequence;
-  buffer[4] = 0xff;
-  buffer[5] = DayzPacketType.COMMAND;
-  cmdBuf.copy(buffer, 6);
-  return buffer;
-}
-
-export function parsePacket(buffer: Buffer): DayzParsedPacket | null {
-  if (buffer.length < 6 || buffer[0] !== 0x42 || buffer[1] !== 0x45) {
-    return null;
+const createPayload = (
+  type: DayZPacketType,
+  ...args: (string | number | Buffer)[]
+): Buffer => {
+  const parts: Buffer[] = [Buffer.from([type])];
+  for (const arg of args) {
+    if (typeof arg === "string") {
+      parts.push(Buffer.from(arg, "ascii"));
+    } else if (typeof arg === "number") {
+      parts.push(Buffer.from([arg]));
+    } else {
+      parts.push(arg);
+    }
   }
 
-  const sequence = buffer[3];
-  const type = buffer[5];
+  return Buffer.concat(parts);
+};
 
-  if (type === DayzPacketType.LOGIN) {
-    const success = buffer[6] === 0x01;
-    return { sequence, type: "auth", success };
+const buildPacket = (payload: Buffer): Buffer => {
+  const checksumContent = Buffer.concat([Buffer.from([0xff]), payload]);
+  const checksum = Buffer.alloc(4);
+  checksum.writeInt32LE(crc32.buf(checksumContent), 0);
+
+  // 0xFF is also part of the final packet header
+  return Buffer.concat([HEADER, checksum, Buffer.from([0xff]), payload]);
+};
+
+export const createLoginPacket = (password: string): Buffer => {
+  const payload = createPayload(DayZPacketType.LOGIN, password);
+  return buildPacket(payload);
+};
+
+export const createCommandPacket = (seq: number, command: string): Buffer => {
+  const payload = createPayload(DayZPacketType.COMMAND, seq, command);
+  return buildPacket(payload);
+};
+
+export const createAckPacket = (seq: number): Buffer => {
+  const payload = createPayload(DayZPacketType.MESSAGE, seq);
+  return buildPacket(payload);
+};
+
+export const parsePacket = (buf: Buffer): ParsedPacket => {
+  if (buf.toString("ascii", 0, 2) !== "BE") {
+    throw new Error("Invalid BattlEye packet header.");
   }
 
-  const payload = buffer.toString("utf8", 6);
-  if (type === DayzPacketType.COMMAND) {
-    return { sequence, type: "response", payload };
+  const payload = buf.slice(7);
+
+  const checksumContent = Buffer.concat([Buffer.from([0xff]), payload]);
+  const checksum = buf.readInt32LE(2);
+  const receivedChecksum = crc32.buf(checksumContent);
+
+  if (checksum !== receivedChecksum) {
+    throw new Error(
+      `Invalid checksum. Expected ${receivedChecksum} but got ${checksum}`
+    );
   }
 
-  return { sequence, type: "server", payload };
-}
+  const type = payload.readUInt8(0);
+  let seq = -1;
+  let body: Buffer;
+  let success: boolean | undefined = undefined;
+
+  switch (type) {
+    case DayZPacketType.LOGIN:
+      success = payload.readUInt8(1) === 1;
+      body = payload.slice(2);
+      break;
+    case DayZPacketType.COMMAND:
+      seq = payload.readUInt8(1);
+      body = payload.slice(2);
+      break;
+    case DayZPacketType.MESSAGE:
+      seq = payload.readUInt8(1);
+      body = payload.slice(2);
+      break;
+    default:
+      throw new Error("Unknown packet type");
+  }
+
+  return { type, seq, payload: body, success };
+};
