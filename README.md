@@ -24,7 +24,7 @@ This library allows you to connect to game servers using the RCON protocol to ex
 - [ ] DayZ
 - [x] Minecraft
 - [ ] Palworld
-- [ ] Arma Reforger
+- [x] Arma Reforger
 - [x] Rust
 - [ ] SCUM
 - [ ] Valheim
@@ -81,6 +81,27 @@ To get started with development:
     ```bash
     npm test
     ```
+
+### Project Scripts
+
+This project uses `npm` scripts to automate common development tasks.
+
+- `npm run build`: Compiles the TypeScript code to JavaScript.
+- `npm run dev`: Watches for file changes and recompiles automatically.
+- `npm run lint`: Lints the codebase for style and quality errors using ESLint.
+- `npm run format`: Formats the code using Prettier.
+- `npm run test`: Runs the test suite.
+- `npm run test:integration`: Runs the integration tests against a live server (requires `.env.local` configuration).
+- `npm run ci`: Runs the full continuous integration suite, including type checking, linting, and fast tests.
+
+#### A Note on `npm ci`
+
+It's important to understand the difference between two common commands:
+
+- **`npm ci`**: This is a built-in `npm` command that performs a clean install of dependencies from the `package-lock.json` file. It **does not** run any of the project's custom scripts.
+- **`npm run ci`**: This command executes the custom `"ci"` script defined in `package.json`, which runs a series of checks (type checking, linting, and testing).
+
+The pre-commit hooks for this project use `npm run lint`, so it's possible for a commit to fail the lint check even if `npm ci` completes successfully.
 
 ### Manual integration test
 
