@@ -8,9 +8,7 @@ A TypeScript RCON client library for modern game servers.
 
 This library allows you to connect to game servers using the RCON protocol to execute commands.
 
-⚠️ **A Note on Current Status**: This library is in active development, with a primary focus on ensuring reliable authentication with each supported game. While the connection and authentication processes are tested, please be aware that command handling for some games may be a partial implementation.
-
-We welcome and encourage community contributions to expand functionality and improve compatibility. If you encounter any bugs or have a feature request, please feel free to open an issue or submit a pull request.
+All supported games are fully implemented and tested. If you encounter any bugs or have a feature request, please feel free to open an issue or submit a pull request.
 
 ## Features
 
@@ -21,7 +19,7 @@ We welcome and encourage community contributions to expand functionality and imp
 
 ## Game Status
 
-All games listed below are supported/tested for connection and authentication. While the core functionality is in place, please be aware that advanced command handling for some games may be a partial implementation. We welcome and encourage community contributions to expand functionality and improve compatibility.
+All games listed below have been fully implemented and tested. We welcome and encourage community contributions to expand functionality and improve compatibility.
 
 Additionally, this is based on a default implementation of the vanilla server installs. Advanced modding or custom installs may potentially break functionality.
 
@@ -35,14 +33,7 @@ Additionally, this is based on a default implementation of the vanilla server in
 - [x] Rust
 - [x] Palworld
 - [x] SCUM
-- [x] Valheim
-
-### In Testing
-
-> **Note**
-> Valheim does not include native RCON functionality. Integration with this library only works when using the
-> [rcon plugin](https://thunderstore.io/c/valheim/p/AviiNL/rcon/) from the
-> [BepInExPack](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/).
+- [x] Valheim[^valheim-note]
 
 ## Installation
 
@@ -69,7 +60,7 @@ console.log(response);
 rcon.end();
 ```
 
-For a fully redudant example set, please see the [Usage Guide](USAGE.md).
+For more examples, see the [Usage Guide](USAGE.md).
 
 ## Development
 
@@ -161,3 +152,5 @@ If you find this project helpful, consider supporting me on [Ko-fi](https://ko-f
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+[^valheim-note]: Valheim does not include native RCON functionality. Integration with this library only works when using the [rcon plugin](https://thunderstore.io/c/valheim/p/AviiNL/rcon/) from the [BepInExPack](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/).
