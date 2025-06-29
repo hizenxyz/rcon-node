@@ -9,9 +9,10 @@ This document provides examples of how to use `rcon-node` to connect to the vari
 - [Arma Reforger](#connecting-to-an-arma-reforger-server)
 - [DayZ](#connecting-to-a-dayz-server)
 - [Minecraft](#connecting-to-a-minecraft-server)
+- [SCUM](#connecting-to-a-scum-server)
+- [Valheim](#connecting-to-a-valheim-server)
 - [Palworld](#connecting-to-a-palworld-server)
 - [Rust](#connecting-to-a-rust-server)
-- [Valheim](#connecting-to-a-valheim-server)
 
 ---
 
@@ -137,6 +138,31 @@ const rcon = await Rcon.connect({
 });
 
 const response = await rcon.send("say Hello from rcon-node!");
+console.log(response);
+
+rcon.end();
+```
+
+---
+
+## Connecting to a SCUM Server
+
+SCUM uses the BattlEye RCON protocol over UDP. The library handles packet structure, checksums and keep-alive messages automatically. You can find the official protocol specification [here](https://www.battleye.com/downloads/BERConProtocol.txt).
+
+The client implementation for this game can be found at [`src/clients/scum.client.ts`](./src/clients/scum.client.ts).
+
+```typescript
+import { Rcon, Game } from "rcon-node";
+
+// Connect to a SCUM server
+const rcon = await Rcon.connect({
+  host: "your.server.ip",
+  port: 12345, // Your BattlEye RCON port
+  password: "your_password",
+  game: Game.SCUM,
+});
+
+const response = await rcon.send("help");
 console.log(response);
 
 rcon.end();
