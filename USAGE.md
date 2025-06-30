@@ -6,6 +6,7 @@ This document provides examples of how to use `rcon-node` to connect to the vari
 
 - [7 Days to Die](#connecting-to-a-7-days-to-die-server)
 - [ARK: Survival Evolved](#connecting-to-an-ark-survival-evolved-server)
+- [ARK: Survival Ascended](#connecting-to-an-ark-survival-ascended-server)
 - [Arma Reforger](#connecting-to-an-arma-reforger-server)
 - [DayZ](#connecting-to-a-dayz-server)
 - [Minecraft](#connecting-to-a-minecraft-server)
@@ -60,6 +61,30 @@ const rcon = await Rcon.connect({
 });
 
 // Get a list of players
+const response = await rcon.send("ListPlayers");
+console.log(response);
+
+rcon.end();
+```
+
+---
+
+## Connecting to an ARK: Survival Ascended Server
+
+ARK: Survival Ascended uses the same Source RCON protocol as ARK: Survival Evolved.
+The client implementation for this game can be found at [`src/clients/ark-survival-ascended.client.ts`](./src/clients/ark-survival-ascended.client.ts).
+
+```typescript
+import { Rcon, Game } from "rcon-node";
+
+// Connect to an ARK: Survival Ascended server
+const rcon = await Rcon.connect({
+  host: "your.server.ip",
+  port: 27020, // Your RCON port
+  password: "your_password",
+  game: Game.ARK_SURVIVAL_ASCENDED,
+});
+
 const response = await rcon.send("ListPlayers");
 console.log(response);
 
