@@ -27,6 +27,7 @@ Additionally, this is based on a default implementation of the vanilla server in
 
 - [x] 7 Days to Die
 - [x] ARK: Survival Evolved
+- [x] ARK: Survival Ascended
 - [x] Arma Reforger
 - [x] DayZ
 - [x] Minecraft
@@ -107,7 +108,7 @@ To run it, you first need to create a `.env.local` file in the root of the proje
 The test configuration is controlled by these environment variables:
 
 - `RCON_GAME`: The game to test against. This must match a value from the `Game` enum.
-  - Possible values: `SEVEN_DAYS_TO_DIE`, `ARK_SURVIVAL_EVOLVED`, `ARMA_REFORGER`, `DAYZ`, `MINECRAFT`, `PALWORLD`, `RUST`, `SCUM`, `VALHEIM`
+  - Possible values: `SEVEN_DAYS_TO_DIE`, `ARK_SURVIVAL_EVOLVED`, `ARK_SURVIVAL_ASCENDED`, `ARMA_REFORGER`, `DAYZ`, `MINECRAFT`, `PALWORLD`, `RUST`, `SCUM`, `VALHEIM`
 - `RCON_HOST`: The IP address of the RCON server.
 - `RCON_PORT`: The port of the RCON server.
 - `RCON_PASSWORD`: The RCON password.

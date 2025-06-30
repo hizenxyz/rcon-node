@@ -5,6 +5,7 @@ import { MinecraftClient } from "./clients/minecraft.client";
 import { RustClient } from "./clients/rust.client";
 import { SevenDaysToDieClient } from "./clients/seven-days-to-die.client";
 import { ArkSurvivalEvolvedClient } from "./clients/ark-survival-evolved.client";
+import { ArkSurvivalAscendedClient } from "./clients/ark-survival-ascended.client";
 import { DayZClient } from "./clients/dayz.client";
 import { PalworldClient } from "./clients/palworld.client";
 import { ArmaReforgerClient } from "./clients/arma-reforger.client";
@@ -35,6 +36,9 @@ export class Rcon extends EventEmitter {
         break;
       case Game.ARK_SURVIVAL_EVOLVED:
         this.client = new ArkSurvivalEvolvedClient(options);
+        break;
+      case Game.ARK_SURVIVAL_ASCENDED:
+        this.client = new ArkSurvivalAscendedClient(options);
         break;
       case Game.DAYZ:
         this.client = new DayZClient(options);
