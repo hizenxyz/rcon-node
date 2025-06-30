@@ -37,6 +37,14 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./game": {
+      "types": "./dist/game.d.ts",
+      "import": "./dist/game.js"
+    },
+    "./rcon": {
+      "types": "./dist/rcon.d.ts",
+      "import": "./dist/rcon.js"
     }
   },
   "scripts": {
